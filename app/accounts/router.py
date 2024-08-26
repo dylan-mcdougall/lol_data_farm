@@ -17,7 +17,12 @@ async def fetch_Accounts( db: Session ):
         data = await accounts_service.fetch_accounts()
         
         for account in data.get("accounts", []):
-            database_service.store_data( str( account ) )
+            existing_account = database_service.get_account_by_summoner_id( account[ "summoner_id" ] )
+            
+            if existing_account:
+                database_service.update_account( account[ "summoner_id" ], account )
+            else:
+                database_service.store_account( account )
 
         last_fetch_time = datetime.utcnow()
 
@@ -38,6 +43,6 @@ async def fetch_accounts( background_tasks: BackgroundTasks, db: Session = Depen
 @router.get( "/list" )
 async def list_accounts(db: Session = Depends( get_db ) ):
     database_service = DatabaseService( db )
-    accounts = database_service.get_all_data()
+    accounts = database_service.get_all_accounts()
 
-    return { "accounts": accounts }
+    return { "accounts": [ account.__dict__ for account in accounts ] }
