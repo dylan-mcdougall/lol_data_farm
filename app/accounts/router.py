@@ -1,3 +1,5 @@
+import httpx
+from ..config import Settings, get_settings
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..dependencies import get_db
@@ -40,8 +42,38 @@ async def fetch_accounts( background_tasks: BackgroundTasks, db: Session = Depen
     else:
         return { "message": "Account fetch skipped, last fetch was less than 24 hours ago" }
 
+@router.get( "/kr/masters" )
+async def get_kr_masters( settings: Settings = Depends( get_settings )):
+    url = f"https://kr.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key={settings.API_KEY}"
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        print(f"There are {len(data["entries"])} players in the MASTERS tier in KR.")
+        return data
+    
+    else:
+        return {"error": "Failed to fetch data from RGAPI"}
+    
+@router.get( "/na/masters" )
+async def get_na_masters( settings: Settings = Depends( get_settings )):
+    url = f"https://na1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key={settings.API_KEY}"
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        print(f"There are {len(data["entries"])} players in the MASTERS tier in NA.")
+        return data
+    
+    else:
+        return {"error": "Failed to fetch data from RGAPI"}
+
 @router.get( "/list" )
-async def list_accounts(db: Session = Depends( get_db ) ):
+async def list_accounts( db: Session = Depends( get_db ) ):
     database_service = DatabaseService( db )
     accounts = database_service.get_all_accounts()
 
