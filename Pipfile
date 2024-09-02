@@ -8,6 +8,10 @@ fastapi = {extras = ["standard"], version = "*"}
 uvicorn = "*"
 sqlalchemy = "*"
 pylint = "*"
+aiohttp = "*"
+rq = "*"
+redis = "*"
+schedule = "*"
 
 [dev-packages]
 
